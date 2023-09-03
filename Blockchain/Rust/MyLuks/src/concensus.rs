@@ -1,25 +1,40 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::time::{SystemTime, UNIX_EPOCH};
+use sha2::{Sha256, Digest};
+use crate::validate_transaction::ValidationError;
+
+pub struct Transaction {
+    pub from: String,
+    pub to: String,
+    pub amount: u64,
+    pub signature: String,
+}
 
 pub struct Block {
     pub index: u64,
-    pub nonce: u64,
+    pub timestamp: u64,
     pub prev_block_hash: String,
     pub block_hash: String,
-    pub transactions: Vec<String>, // Listado de transacciones en el bloque.
+    pub transactions: Vec<Transaction>,
+}
+
+pub enum ConsensusError {
+    DuplicateTransaction,
+    BlockValidationError,
 }
 
 pub struct Consensus {
-    pub difficulty: u64,
     pub blockchain: Vec<Block>,
-    pub hash_prefix: String, // Prefijo que debe tener el hash para considerarse válido.
+    pub hash_prefix: String,
+    processed_transactions: HashSet<String>,
 }
 
 impl Consensus {
-    pub fn new(difficulty: u64, hash_prefix: String) -> Self {
+    pub fn new(hash_prefix: String) -> Self {
         let mut consensus = Consensus {
-            difficulty,
             blockchain: Vec::new(),
             hash_prefix,
+            processed_transactions: HashSet::new(),
         };
 
         consensus.create_genesis_block();
@@ -30,7 +45,7 @@ impl Consensus {
         if self.blockchain.is_empty() {
             let genesis_block = Block {
                 index: 0,
-                nonce: 0,
+                timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
                 prev_block_hash: String::from("0"),
                 block_hash: String::from("0"),
                 transactions: Vec::new(),
@@ -39,61 +54,66 @@ impl Consensus {
         }
     }
 
-    pub fn implement_poh(&mut self, transactions: Vec<String>) -> Result<(), &'static str> {
+    pub fn implement_poh(&mut self, transactions: Vec<Transaction>) -> Result<(), ConsensusError> {
+        // Check for duplicate transactions
+        for tx in &transactions {
+            let tx_id = self.calculate_transaction_id(tx);
+            if self.processed_transactions.contains(&tx_id) {
+                return Err(ConsensusError::DuplicateTransaction);
+            }
+        }
+
         let prev_block = self.blockchain.last().unwrap();
         let mut new_block = Block {
             index: prev_block.index + 1,
-            nonce: 0,
+            timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
             prev_block_hash: prev_block.block_hash.clone(),
             block_hash: String::new(),
-            transactions,
+            transactions: transactions.clone(),
         };
 
-        let block_content = format!("{}{:?}", new_block.prev_block_hash, new_block.transactions);
-        new_block = self.implement_pow(block_content)?;
+        new_block.block_hash = self.calculate_block_hash(&new_block);
 
-        // Antes de añadir el bloque, validar.
-        if self.validate_block(&new_block) {
-            self.blockchain.push(new_block);
-            Ok(())
-        } else {
-            Err("El bloque no pasó la validación.")
+        // Validate the new block
+        if !self.validate_block(&new_block) {
+            return Err(ConsensusError::BlockValidationError);
         }
+
+        // If block is valid, add to blockchain and update processed transactions
+        for tx in &transactions {
+            let tx_id = self.calculate_transaction_id(tx);
+            self.processed_transactions.insert(tx_id);
+        }
+        self.blockchain.push(new_block);
+        Ok(())
     }
 
-    fn implement_pow(&self, block_content: String) -> Result<Block, &'static str> {
-        let mut new_block = Block {
-            index: self.blockchain.len() as u64,
-            nonce: 0,
-            prev_block_hash: self.blockchain.last().unwrap().block_hash.clone(),
-            block_hash: String::new(),
-            transactions: Vec::new(),
-        };
-
-        // Aquí es donde implementamos la lógica del Proof of Work.
-        loop {
-            let data = format!("{}{}{}", block_content, new_block.nonce, new_block.prev_block_hash);
-            let hash = self.calculate_hash(&data);
-            if hash.starts_with(&self.hash_prefix) {
-                new_block.block_hash = hash;
-                return Ok(new_block);
-            }
-            new_block.nonce += 1;
-        }
+    fn calculate_block_hash(&self, block: &Block) -> String {
+        let input = format!("{}{}{}{:?}", block.index, block.timestamp, block.prev_block_hash, block.transactions);
+        let mut hasher = Sha256::new();
+        hasher.update(input);
+        format!("{:x}", hasher.finalize())
     }
 
-    fn calculate_hash(&self, data: &str) -> String {
-        // En una implementación real, utilizaríamos alguna función criptográfica como SHA256.
-        // Aquí, por simplicidad, sólo devolvemos el mismo dato.
-        data.to_string()
+    fn calculate_transaction_id(&self, tx: &Transaction) -> String {
+        let input = format!("{}{}{}{}", tx.from, tx.to, tx.amount, tx.signature);
+        let mut hasher = Sha256::new();
+        hasher.update(input);
+        format!("{:x}", hasher.finalize())
     }
 
     fn validate_block(&self, block: &Block) -> bool {
-        // Aquí puedes agregar más validaciones para el bloque, como verificar el hash, 
-        // el índice, las transacciones, etc.
-        block.block_hash.starts_with(&self.hash_prefix)
+        // Validate that the block's timestamp is greater than the last block in the chain.
+        let prev_block = self.blockchain.last().unwrap();
+        if block.timestamp <= prev_block.timestamp {
+            return false;
+        }
+        
+        // Validate that the block hash is correct.
+        if block.block_hash != self.calculate_block_hash(block) {
+            return false;
+        }
+
+        true
     }
 }
-
-// Nota: Esta implementación es un esqueleto y solo sirve como punto de partida.
-// Las lógicas reales de Proof of History y Proof of Work son mucho más complejas y requieren más código.
