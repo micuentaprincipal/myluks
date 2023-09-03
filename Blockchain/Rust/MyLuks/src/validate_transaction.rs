@@ -1,56 +1,78 @@
-use crate::luks_main_contract::accounts::Accounts;
+use crate::luks_main_contract::accounts::{Accounts, AccountError};
 use crate::security::Security;
 
+/// Enum for handling validation errors in transactions.
+pub enum ValidationError {
+    ExceedsMaxAmount,
+    InsufficientSenderBalance,
+    InvalidRecipient,
+    SignatureFailure,
+    DoubleSpend,
+    SenderAccountLocked // New error type for locked accounts
+}
+
+/// Main structure for handling transaction validation.
 pub struct ValidateTransaction {
-    // La estructura ya tiene un HashSet para procesar transacciones; lo usaremos para la detección de doble gasto.
     security_module: Security,
 }
 
 impl ValidateTransaction {
+    /// Constructor for initializing a new ValidateTransaction instance.
     pub fn new(security_module: Security) -> Self {
-        ValidateTransaction {
-            security_module,
-        }
+        ValidateTransaction { security_module }
     }
 
-    pub fn validate_transaction(&mut self, accounts: &Accounts, from: &String, to: &String, amount: u64, signature: &String) -> Result<bool, &'static str> {
-        // Límite de transacción
-        const MAX_TRANSACTION_AMOUNT: u64 = 10_000; // Por ejemplo
+    /// Main function to validate a transaction based on various conditions.
+    pub fn validate_transaction(
+        &mut self,
+        accounts: &Accounts,
+        from: &String,
+        to: &String,
+        amount: u64,
+        signature: &String
+    ) -> Result<bool, ValidationError> {
+        const MAX_TRANSACTION_AMOUNT: u64 = 10_000;
+
+        // Check if the amount exceeds the maximum allowed transaction amount.
         if amount > MAX_TRANSACTION_AMOUNT {
-            return Err("La cantidad excede el límite máximo de transacción");
-        }
-        
-        // Verificar que el remitente tenga suficiente saldo
-        if accounts.get_balance(from)? < amount {
-            return Err("Saldo insuficiente en la cuenta del remitente");
+            return Err(ValidationError::ExceedsMaxAmount);
         }
 
-        // Verificar que el destinatario exista
+        // Check if the sender's account is locked (New Check).
+        let sender_details = accounts.get_account_details(from).map_err(|_| ValidationError::InvalidRecipient)?;
+        if sender_details.locked {
+            return Err(ValidationError::SenderAccountLocked);
+        }
+
+        // Check if the sender has enough balance to proceed with the transaction.
+        if accounts.get_balance(from).unwrap_or(0) < amount {
+            return Err(ValidationError::InsufficientSenderBalance);
+        }
+
+        // Check if the recipient exists.
         if accounts.get_balance(to).is_err() {
-            return Err("La cuenta destinataria no existe");
+            return Err(ValidationError::InvalidRecipient);
         }
 
-        // Validación de firmas - Placeholder para futura implementación criptográfica
-        if !Self::validate_signature(from, signature, accounts) {
-            return Err("Validación de firma fallida");
+        // Validate the signature of the transaction.
+        if !self.validate_signature(from, signature, accounts) {
+            return Err(ValidationError::SignatureFailure);
         }
 
-        // Validación contra doble gasto usando el módulo de seguridad
+        // Check for double spending.
         let transaction_id = format!("{}-{}-{}", from, to, amount);
-        if self.security_module.check_transaction_uniqueness(&transaction_id) {
-            return Err("Doble gasto detectado");
+        if self.security_module.has_transaction_been_processed(&transaction_id) {
+            return Err(ValidationError::DoubleSpend);
         }
 
-        // Agregar esta transacción a las transacciones procesadas usando el módulo de seguridad
-        self.security_module.add_processed_transaction(transaction_id)?;
-
+        // Mark the transaction as processed.
+        self.security_module.add_processed_transaction(transaction_id).unwrap();
         Ok(true)
     }
 
-    fn validate_signature(account: &String, signature: &String, accounts: &Accounts) -> bool {
-        // Esta es una validación simplificada: simplemente comprobamos que la firma sea igual a la clave pública del remitente.
-        // En una implementación real, se usaría criptografía de clave pública para verificar la firma.
-        let account_details = accounts.accounts_map.get(account).unwrap();
+    /// Function to validate the signature of a transaction.
+    fn validate_signature(&self, account: &String, signature: &String, accounts: &Accounts) -> bool {
+        let account_details = accounts.get_account_details(account).unwrap();
         &account_details.public_key.value == signature.as_bytes()
     }
 }
