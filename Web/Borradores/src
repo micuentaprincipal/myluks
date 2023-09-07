@@ -1,1 +1,207 @@
-joselyne pon cosas aqui
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Encabezado y metadatos -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Luks - Revolucionando la Web 3.0</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+
+    <!-- Estilos -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Asap+Condensed:wght@600&display=swap');
+
+        /* Estilos generales de la página */
+        body {
+            font-family: 'Asap Condensed', sans-serif;
+            background-color: black;
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Estilos para el encabezado */
+        header {
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 36px;
+        }
+
+        /* Estilos para los botones */
+        .buy-button {
+            background-color: #F64A00;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Estilos para la ventana emergente de compra */
+        .popup-form {
+            text-align: left;
+            color: black; /* Texto en negro */
+        }
+
+        .popup-form label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .popup-form input {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+
+        /* Estilos para ocultar la ventana emergente */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        .popup-content {
+            background-color: white;
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 20px;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        .close-popup {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+        }
+
+        /* Estilos para la barra de progreso */
+        .progress-bar {
+            width: 72%; /* 72% de progreso */
+            background-color: #F64A00; /* Color naranja */
+            height: 20px;
+            text-align: center;
+            line-height: 20px;
+            color: white; /* Texto en blanco */
+        }
+    </style>
+
+    <!-- JavaScript para controlar la ventana emergente de compra -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const comprarButton = document.getElementById("comprar-button");
+            const compraPopup = document.getElementById("compra-popup");
+            const closePopup = document.querySelector(".close-popup");
+            const quienesSomos = document.getElementById("descripcion-quienes-somos");
+            const contacto = document.getElementById("descripcion-contacto");
+            
+            comprarButton.addEventListener("click", function() {
+                // Mostrar la ventana emergente de compra
+                compraPopup.style.display = "block";
+            });
+
+            closePopup.addEventListener("click", function() {
+                // Cerrar la ventana emergente de compra
+                compraPopup.style.display = "none";
+            });
+
+            quienesSomos.addEventListener("click", function() {
+                quienesSomos.style.display = "block";
+                contacto.style.display = "none";
+            });
+
+            contacto.addEventListener("click", function() {
+                quienesSomos.style.display = "none";
+                contacto.style.display = "block";
+            });
+        });
+    </script>
+</head>
+<body>
+    <!-- Contenido de la página -->
+    <div class="progress-bar-container">
+        <!-- Barra de progreso -->
+        <div class="progress-bar">72%</div>
+    </div>
+    <div class="page-content">
+        <header>
+            <!-- Encabezado existente -->
+            <h1>Bienvenido a My Luks</h1>
+            <p>Revolucionando la Web 3.0</p>
+        </header>
+        <section class="banner">
+            <!-- Banner existente -->
+            <p>Banner: (Insertar contenido real aquí)</p>
+        </section>
+        <section class="construction">
+            <!-- Sección de construcción existente -->
+            <p>Sección de construcción: (Insertar contenido real aquí)</p>
+        </section>
+        <section id="descripcion-quienes-somos" class="hidden">
+            <!-- Descripción de Quiénes Somos existente -->
+            <p>Quiénes Somos:</p>
+            <p>Somos My Luks, una startup tecnológica en ascenso con ambiciones revolucionarias. Nuestra misión es alterar el paradigma de la Web 3.0 y desmantelar la estructura centralizada de las divisas globales. Estamos comprometidos en combatir la corrupción sistémica en el sistema financiero mundial.</p>
+
+            <!-- Botón "Comprar Ahora" -->
+            <button class="buy-button" id="comprar-button">Comprar Ahora</button>
+        </section>
+        <section id="descripcion-contacto" class="hidden">
+            <!-- Descripción de Contacto existente -->
+            <p>Información de Contacto:</p>
+            <p>Puedes contactarnos en cualquier momento:</p>
+            <ul>
+                <li>Teléfono: +123456789</li>
+                <li>Correo Electrónico: info@myluks.com</li>
+            </ul>
+        </section>
+        <!-- Ventanas emergentes -->
+        <div id="compra-popup" class="popup">
+            <div class="popup-content">
+                <span class="close-popup">&times;</span>
+                <h3>Información de Compra</h3>
+                <form class="popup-form">
+                    <label for="nombre">Nombre Completo:</label>
+                    <input type="text" id="nombre" name="nombre" required>
+
+                    <label for="correo">Correo Electrónico:</label>
+                    <input type="email" id="correo" name="correo" required>
+
+                    <label for="cantidad">Cantidad de LUKS a Comprar:</label>
+                    <input type="number" id="cantidad" name="cantidad" required>
+
+                    <label for="tarjeta">Número de Tarjeta:</label>
+                    <input type="text" id="tarjeta" name="tarjeta" required>
+
+                    <label for="fecha">Fecha de Vencimiento (MM/YY):</label>
+                    <input type="text" id="fecha" name="fecha" placeholder="MM/YY" required>
+
+                    <label for="cvv">CVV:</label>
+                    <input type="text" id="cvv" name="cvv" required>
+
+                    <label for="direccion">Dirección de Facturación:</label>
+                    <input type="text" id="direccion" name="direccion" required>
+
+                    <button class="buy-button" id="finalizar-compra-button">Finalizar Compra</button>
+                </form>
+            </div>
+        </div>
+        <div id="proceso-popup" class="popup">
+            <!-- Ventana emergente de Proceso de Compra existente -->
+            <p>Ventana emergente de Proceso de Compra: (Insertar contenido real aquí)</p>
+        </div>
+    </div>
+</body>
+</html>
+
