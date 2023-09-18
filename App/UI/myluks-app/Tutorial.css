@@ -1,0 +1,48 @@
+.tutorial-section {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+}
+
+.tutorial-item {
+    margin-top: 15px;
+}
+
+.tutorial-header {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: none;
+    border: none;
+    font-size: inherit; 
+    font-weight: bold; 
+    text-align: left;
+    padding: 5px 10px; /* Añade un poco de padding para mejorar la interacción */
+    border-radius: 5px; /* Para efectos de hover y focus */
+    transition: background-color 0.3s; /* Transición suave para efectos de hover */
+}
+
+.tutorial-header:hover {
+    background-color: #f5f5f5; /* Color de fondo al pasar el cursor */
+}
+
+.tutorial-header:focus {
+    outline: none;
+    background-color: #e0e0e0; /* Color de fondo al estar enfocado */
+    box-shadow: 0 0 0 3px rgba(0, 0, 255, 0.5); /* Estilo para mostrar el foco, más prominente */
+}
+
+.tutorial-content {
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease-out; /* Transición más suave */
+}
+
+.tutorial-content.open {
+    max-height: 200px; /* Aumenta para considerar contenido más largo */
+}
