@@ -4,7 +4,8 @@ pub enum AccountError {
     AccountNotFound,
     InsufficientBalance,
     UnauthorizedKeyChange,
-    AccountLocked
+    AccountLocked,
+    AccountNotLocked,
 }
 
 use std::collections::{HashMap, VecDeque};
@@ -12,6 +13,13 @@ use std::collections::{HashMap, VecDeque};
 #[derive(Debug, PartialEq, Clone)]
 pub struct PublicKey {
     pub value: Vec<u8>, // Represents the public key.
+}
+
+impl PublicKey {
+    // New function to get hex representation
+    pub fn to_hex(&self) -> String {
+        hex::encode(&self.value)
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -27,13 +35,29 @@ pub struct AccountDetails {
     pub balance: u64,
     pub public_key: PublicKey,
     pub transactions: VecDeque<TransactionHistory>, // Will store the last N transactions.
-    pub locked: bool, // New field to indicate if account is locked
+    pub locked: bool,
 }
 
 #[derive(Debug, PartialEq)]
 pub struct Accounts {
     pub accounts_map: HashMap<String, AccountDetails>,
-    pub max_transaction_history: usize,  // Configurable transaction history limit
+    pub max_transaction_history: usize,
+}
+
+// Nueva estructura para almacenar hash de las cuentas
+#[derive(Debug, PartialEq)]
+pub struct AccountHash {
+    pub account_id: String,
+    pub hash: Vec<u8>, // Hash de la cuenta
+}
+
+impl AccountHash {
+    // Función para calcular el hash de una cuenta
+    pub fn compute_hash(account: &AccountDetails) -> Vec<u8> {
+        let data = serde_json::to_string(&account).unwrap();
+        let digest = sha2::Sha256::digest(data.as_bytes());
+        digest.to_vec()
+    }
 }
 
 impl Accounts {
@@ -103,6 +127,20 @@ impl Accounts {
         Ok(())
     }
 
+    // Nueva función para obtener el hash de una cuenta
+    pub fn get_account_hash(&self, account_id: &String) -> Option<Vec<u8>> {
+        self.accounts_map.get(account_id).map(|account| AccountHash::compute_hash(account))
+    }
+
+    // Nueva función para validar la integridad de una cuenta
+    pub fn validate_account_integrity(&self, account_id: &String, provided_hash: Vec<u8>) -> Result<(), AccountError> {
+        match self.get_account_hash(account_id) {
+            Some(hash) if hash == provided_hash => Ok(()),
+            Some(_) => Err(AccountError::AccountAlreadyExists), // Hashes no coinciden
+            None => Err(AccountError::AccountNotFound),
+        }
+    }
+
     // New Functions
     // Function to update the account balance
     pub fn update_account_balance(&mut self, account_id: &String, new_balance: u64) -> Result<(), AccountError> {
@@ -127,4 +165,28 @@ impl Accounts {
         account.locked = false;
         Ok(())
     }
+    // New function to validate if the account is locked
+    fn is_account_locked(&self, account_id: &String) -> Result<(), AccountError> {
+        match self.accounts_map.get(account_id) {
+            Some(account) if account.locked => Err(AccountError::AccountLocked),
+            Some(_) => Ok(()),
+            None => Err(AccountError::AccountNotFound),
+        }
+    }
+
+    pub fn add_transaction(&mut self, account_id: &String, transaction: TransactionHistory) -> Result<(), AccountError> {
+        let account = self.accounts_map.get_mut(account_id).ok_or(AccountError::AccountNotFound)?;
+        if account.transactions.len() >= self.max_transaction_history {
+            account.transactions.pop_front();
+        }
+        account.transactions.push_back(transaction);
+        Ok(())
+    }
+
+    pub fn get_transactions(&self, account_id: &String) -> Result<VecDeque<TransactionHistory>, AccountError> {
+        match self.accounts_map.get(account_id) {
+            Some(account) => Ok(account.transactions.clone()),
+            None => Err(AccountError::AccountNotFound),
+        }
+    }    
 }
