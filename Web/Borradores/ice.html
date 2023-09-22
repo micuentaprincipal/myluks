@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Luks - La Revolución de la Web 3.0</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #101010;
+            color: #FFF;
+        }
+        .banner {
+            width: 100%;
+            object-fit: cover;
+        }
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2em;
+        }
+        .navbar {
+            background-color: #F64A00;
+            padding: 1em 0;
+        }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            margin: 0 1em;
+            font-weight: bold;
+        }
+        .welcome {
+            text-align: center;
+            font-weight: 600;
+            font-size: 2em;
+            margin-top: 1.5em;
+        }
+        .welcome-sub {
+            text-align: center;
+            font-size: 1.2em;
+            margin: 1em 0;
+        }
+        .option-section {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .option {
+            flex: 1;
+            border: 2px solid #F64A00;
+            padding: 1.5em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .option:hover {
+            background-color: #F64A00;
+        }
+        .option h3 {
+            font-weight: 600;
+            margin-bottom: 1em;
+        }
+        .buy-button {
+            display: block;
+            background-color: #F64A00;
+            color: white;
+            padding: 1em 2em;
+            text-align: center;
+            margin: 3em auto;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .buy-button:hover {
+            background-color: #FF7B39;
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10;
+            justify-content: center;
+            align-items: center;
+        }
+        .popup-content {
+            background: #FFF;
+            color: #000;
+            padding: 2em;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 600px;
+            position: relative;
+        }
+        .popup-content label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 1em;
+        }
+        .popup-content input {
+            width: 100%;
+            padding: 0.8em;
+            margin-bottom: 1em;
+            border: 1px solid #CCC;
+            border-radius: 5px;
+        }
+        .popup-content button {
+            display: block;
+            background-color: #F64A00;
+            color: white;
+            padding: 1em 2em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin: 1em auto;
+        }
+        .popup-content button:hover {
+            background-color: #FF7B39;
+        }
+        .popup-content .close {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            cursor: pointer;
+            font-size: 1.5em;
+        }
+        .progress-bar {
+            width: 90%;
+            background-color: #F64A00;
+            height: 20px;
+            text-align: center;
+            line-height: 20px;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+        .coin-3d {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+        }
+        .coin-3d img {
+            width: 200px;
+            animation: spin 10s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotateY(0deg); }
+            100% { transform: rotateY(360deg); }
+        }
+        .section {
+            padding: 2em 0;
+            text-align: center;
+        }
+        .section h2 {
+            font-size: 2em;
+            margin-bottom: 1em;
+            color: #F64A00;
+        }
+        .section p {
+            font-size: 1.2em;
+            line-height: 1.6;
+        }
+        .cta-button {
+            background-color: #F64A00;
+            color: white;
+            padding: 1em 2em;
+            text-align: center;
+            border-radius: 5px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+        .cta-button:hover {
+            background-color: #FF7B39;
+        }
+        .image {
+            max-width: 100%;
+            height: auto;
+            margin: 2em 0;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+        }
+    </style>
+    <script>
+        function togglePopup() {
+            const popup = document.getElementById("popup");
+            if (popup.style.display === "none" || !popup.style.display) {
+                popup.style.display = "flex";
+            } else {
+                popup.style.display = "none";
+            }
+        }
+
+        function openWallet() {
+            // Aquí se agregaría el código para abrir la billetera digital de LUKS.
+            // Esto incluiría la autenticación del usuario y la visualización de su saldo.
+            // También se podría habilitar la opción para realizar transacciones.
+        }
+    </script>
+</head>
+
+<body>
+    <div class="navbar">
+        <a href="#">Inicio</a>
+        <a href="#quienes-somos">¿Quiénes Somos?</a>
+        <a href="#contacto">Contacto</a>
+        <a href="#">Servicios</a>
+        <a href="#">Comunidad</a>
+    </div>
+    <img src="documentos/ML/34" alt="Banner My Luks" class="banner">
+    <div class="progress-bar">90%</div>
+    <div class="main-content">
+        <div class="welcome">Bienvenido a My Luks</div>
+        <div class="welcome-sub">Revolucionando la Web 3.0</div>
+        <div class="option-section">
+            <div class="option" id="quienes-somos">
+                <h3>¿Quiénes Somos?</h3>
+                <p>
+                    My Luks es una startup tecnológica de vanguardia. Buscamos alterar el paradigma de la Web 3.0, combatiendo la estructura centralizada de las divisas. Con una base sólida en blockchain, nos esforzamos por ser líderes en la era digital. Nuestra visión es clara: crear un ecosistema financiero justo y equitativo.
+                </p>
+            </div>
+            <div class="option" id="contacto">
+                <h3>Información de Contacto</h3>
+                <p>
+                    Celular: 12345667<br>
+                    Correo: info@myluks.co<br>
+                    Síguenos en todas las redes sociales.
+                </p>
+            </div>
+        </div>
+        <a href="#" class="cta-button" onclick="openWallet()">Wallet LUKS</a>
+        <div class="section">
+            <h2>Descubre Nuestra Moneda LUKS</h2>
+            <p>¡Mira nuestra moneda digital LUKS en 3D!</p>
+            <div class="coin-3d">
+                <!-- Agregar aquí el modelo 3D de la moneda -->
+                <img src="luks-3d.png" alt="Moneda LUKS en 3D" class="image">
+            </div>
+        </div>
+        <div class="section">
+            <h2>Nuestro Progreso</h2>
+            <p>Estamos avanzando rápidamente hacia nuestra visión. Aquí puedes seguir nuestro progreso y logros más recientes.</p>
+            <div class="progress">
+                <!-- Agregar información sobre el progreso de la empresa aquí -->
+                <p>Meta de Token LUKS alcanzada: 60%</p>
+                <p>Usuarios en nuestra comunidad: 10,000</p>
+                <p>Desarrollo de la billetera digital en curso</p>
+            </div>
+        </div>
+        <div class="section">
+            <h2>Token LUKS</h2>
+            <p>Nuestro token digital LUKS es la base de nuestro ecosistema. Descubre sus características y cómo puedes obtenerlo.</p>
+            <ul>
+                <li>Suministro total: 33 millones de tokens</li>
+                <li>Transacciones rápidas y seguras</li>
+                <li>Utilizado para pagos y recompensas</li>
+            </ul>
+            <a href="#" class="cta-button">Obtener LUKS</a>
+        </div>
+        <img src="imagen1.jpg" alt="Imagen 1" class="image">
+        <div class="section">
+            <h2>Únete a Nuestra Comunidad</h2>
+            <p>Forma parte de nuestra comunidad en constante crecimiento. Mantente al tanto de las últimas noticias y actualizaciones en el mundo de las criptomonedas.</p>
+            <a href="#" class="cta-button">Únete Ahora</a>
+        </div>
+        <img src="imagen2.jpg" alt="Imagen 2" class="image">
+        <button class="buy-button" onclick="togglePopup()">Comprar Ahora</button>
+    </div>
+    <div class="popup" id="popup">
+        <div class="popup-content">
+            <span class="close" onclick="togglePopup()">X</span>
+            <form>
+                <label for="nombreCompleto">Nombre Completo</label>
+                <input type="text" id="nombreCompleto" required>
+                <label for="email">Correo Electrónico</label>
+                <input type="email" id="email" required>
+                <label for="cantidad">Cantidad de LUKS a comprar</label>
+                <input type="number" id="cantidad" required>
+                <label for="tarjeta">Número de la tarjeta</label>
+                <input type="text" id="tarjeta" required>
+                <label for="vencimiento">Fecha de vencimiento</label>
+                <input type="text" id="vencimiento" required>
+                <label for="cvv">CVV</label>
+                <input type="text" id="cvv" required>
+                <button type="submit">Enviar</button>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>
