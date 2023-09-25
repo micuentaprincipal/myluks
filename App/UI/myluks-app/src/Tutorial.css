@@ -1,0 +1,67 @@
+:root {
+    /* Variables de colores */
+    --color-border: #e0e0e0;
+    --color-background-light: #f5f5f5;
+    --color-background-darker: #e0e0e0;
+    --color-text-dark: #333;
+    --color-focus-shadow: rgba(0, 0, 255, 0.5);
+}
+
+.tutorial-section {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+}
+
+.tutorial-item {
+    margin-top: 15px;
+}
+
+.tutorial-header {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: none;
+    border: none;
+    font-size: inherit; 
+    font-weight: bold; 
+    text-align: left;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.tutorial-header:hover {
+    background-color: var(--color-background-light);
+}
+
+.tutorial-header:focus {
+    outline: none;
+    background-color: var(--color-background-darker);
+    box-shadow: 0 0 0 3px var(--color-focus-shadow);
+}
+
+.tutorial-content {
+    padding: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease-out, opacity 0.3s;
+    opacity: 0;
+}
+
+.tutorial-content.open {
+    max-height: 200px;
+    opacity: 1;
+}
+
+/* Estilos para la imagen */
+.tutorial-content img {
+    max-width: 100%;
+    margin-top: 10px;
+    border-radius: 5px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
