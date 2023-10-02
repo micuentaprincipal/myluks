@@ -4,31 +4,63 @@ type BaseTutorialStep = {
   content: string;
   createdAt: Date;
   lastUpdated: Date;
+  completed?: boolean;
 };
 
-type ImageTutorialStep = BaseTutorialStep & {
+interface ImageTutorialStep extends BaseTutorialStep {
   imageUrl: string;
-};
+  action: string;
+}
 
-type LinkTutorialStep = BaseTutorialStep & {
+interface LinkTutorialStep extends BaseTutorialStep {
   relatedLinks: string[];
-};
+}
 
 type TutorialStep = BaseTutorialStep | ImageTutorialStep | LinkTutorialStep;
 
-// Función para determinar si un paso es de tipo ImageTutorialStep
+const ERROR_MESSAGES = {
+  INVALID_DATA: (id: string) => `Invalid data for step ID: ${id}`,
+  INVALID_IMAGE_URL: (id: string) => `Invalid imageUrl for step ID: ${id}`,
+  INVALID_RELATED_LINK: (id: string) => `Invalid relatedLink for step ID: ${id}`,
+  INVALID_DATE_RANGE: (id: string) => `Invalid date range for step ID: ${id}. 'lastUpdated' cannot be before 'createdAt'.`,
+};
+
+// Función para comprobar si una URL es válida
+const isValidURL = (url: string): boolean => {
+  try {
+    new URL(url);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+const Validator = {
+  isValidData(step: TutorialStep): boolean {
+    return !(!step.id || !step.title || !step.content || !step.createdAt || !step.lastUpdated);
+  },
+  isValidImageURL(url: string): boolean {
+    return isValidURL(url);
+  },
+  areValidRelatedLinks(links: string[]): boolean {
+    return links.every(link => isValidURL(link));
+  },
+  isValidDateRange(step: TutorialStep): boolean {
+    return step.createdAt <= step.lastUpdated;
+  },
+};
+
 const isImageTutorialStep = (step: TutorialStep): step is ImageTutorialStep => {
   return 'imageUrl' in step;
 };
 
-// Función para determinar si un paso es de tipo LinkTutorialStep
 const isLinkTutorialStep = (step: TutorialStep): step is LinkTutorialStep => {
   return 'relatedLinks' in step;
 };
 
 const logError = (message: string) => {
-  // Aquí se puede integrar cualquier logger externo si es necesario
-  console.error(message);
+  // TODO: Consider integrating an external logger if necessary.
+  throw new Error(message);
 };
 
 const transformData = (data: TutorialStep[]): TutorialStep[] => {
@@ -46,15 +78,18 @@ const getRecentlyUpdated = (data: TutorialStep[], days: number): TutorialStep[] 
 // Función principal de validación
 const validateTutorialData = (data: TutorialStep[]) => {
   data.forEach(step => {
-    validateRequiredFields(step);
-
-    if (isImageTutorialStep(step)) {
-      validateImageURL(step);
-    } else if (isLinkTutorialStep(step)) {
-      validateRelatedLinks(step);
+    if (!Validator.isValidData(step)) {
+      logError(ERROR_MESSAGES.INVALID_DATA(step.id));
     }
-
-    validateDates(step);
+    if (!Validator.isValidDateRange(step)) {
+      logError(ERROR_MESSAGES.INVALID_DATE_RANGE(step.id));
+    }
+    if (isImageTutorialStep(step) && !Validator.isValidImageURL(step.imageUrl)) {
+      logError(ERROR_MESSAGES.INVALID_IMAGE_URL(step.id));
+    }
+    if (isLinkTutorialStep(step) && !Validator.areValidRelatedLinks(step.relatedLinks)) {
+      logError(ERROR_MESSAGES.INVALID_RELATED_LINK(step.id));
+    }
   });
 };
 
@@ -88,18 +123,37 @@ const validateDates = (step: TutorialStep) => {
   }
 };
 
-// Función para comprobar si una URL es válida
-const isValidURL = (url: string): boolean => {
-  try {
-    new URL(url);
-    return true;
-  } catch (_) {
-    return false;
-  }
-}
+const markStepAsCompleted = (data: TutorialStep[], stepId: string): TutorialStep[] => {
+  return data.map(step => {
+    if (step.id === stepId) {
+      return {
+        ...step,
+        completed: true
+      };
+    }
+    return step;
+  });
+};
+
+const filterBySearchTerm = (data: TutorialStep[], searchTerm: string): TutorialStep[] => {
+  const lowerCaseSearchTerm = searchTerm.toLowerCase();
+  return data.filter(step => 
+    step.title.toLowerCase().includes(lowerCaseSearchTerm) || 
+    step.content.toLowerCase().includes(lowerCaseSearchTerm)
+  );
+};
+
+const sortDataByLastUpdated = (data: TutorialStep[]): TutorialStep[] => {
+  return [...data].sort((a, b) => b.lastUpdated.getTime() - a.lastUpdated.getTime());
+};
+
+// Caché para los datos
+let cachedData: TutorialStep[] | null = null;
 
 const TutorialData = (): TutorialStep[] => {
-  const data = [
+  if (cachedData) return cachedData;
+
+  const data: TutorialStep[] = [
     {
       id: 'step1',
       title: "Paso 1: Crear una Billetera",
@@ -120,12 +174,15 @@ const TutorialData = (): TutorialStep[] => {
       createdAt: new Date("2023-02-01"),
       lastUpdated: new Date("2023-02-15"),
     },
-    // ... otros pasos ...
   ];
 
-  const sortedData = data.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-  validateTutorialData(sortedData);
-  return sortedData;
-}
+  const sortedData = [...data].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 
-export default TutorialData;  
+  validateTutorialData(sortedData);
+
+  cachedData = sortedData; // Cache the data
+  return sortedData;
+};
+
+export default TutorialData;
+export { markStepAsCompleted, filterBySearchTerm, sortDataByLastUpdated };
