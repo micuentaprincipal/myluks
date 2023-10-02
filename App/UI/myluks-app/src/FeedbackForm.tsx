@@ -1,81 +1,119 @@
 import './FeedbackForm.css';
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { AuthContext } from './App';
 
-// Definición de la interfaz para el estado del formulario
+const MAX_FEEDBACK_LENGTH = 1500;  // Establecer un límite de 1500 caracteres para el feedback
+
 interface FormState {
+  subject: string;
   feedback: string;
   email: string;
-  message: string;
   isSubmitting: boolean;
+  errorMessage: string | null;
+  successMessage: string | null;
 }
 
 const FeedbackForm: React.FC = () => {
+  const { isAuthenticated, email: userEmail } = useContext(AuthContext);
+
   const [formState, setFormState] = useState<FormState>({
+    subject: '',
     feedback: '',
-    email: '',
-    message: '',
+    email: isAuthenticated ? userEmail : '',
     isSubmitting: false,
+    errorMessage: null,
+    successMessage: null,
   });
 
-  // Función para manejar el envío del formulario
+  const isValidEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
+
+  const handleValidation = () => {
+    if (!formState.feedback.trim() || formState.feedback.length > MAX_FEEDBACK_LENGTH) {
+      setFormState(prev => ({ ...prev, errorMessage: 'Por favor, ingresa tus comentarios correctamente antes de enviar.' }));
+      return false;
+    }
+
+    if (formState.email && !isValidEmail(formState.email)) {
+      setFormState(prev => ({ ...prev, errorMessage: 'Por favor, ingresa un correo electrónico válido.' }));
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormState({ ...formState, isSubmitting: true });
+    setFormState(prev => ({ ...prev, isSubmitting: true, errorMessage: null, successMessage: null }));
 
-    // Validación del feedback
-    if (!formState.feedback.trim()) {
-      setFormState({ ...formState, message: 'Por favor, ingresa tus comentarios antes de enviar.', isSubmitting: false });
+    if (!handleValidation()) {
+      setFormState(prev => ({ ...prev, isSubmitting: false }));
       return;
     }
 
-    // Validación del correo electrónico
-    if (formState.email && !formState.email.match(/\S+@\S+\.\S+/)) {
-      setFormState({ ...formState, message: 'Por favor, ingresa un correo electrónico válido.', isSubmitting: false });
-      return;
-    }
-
-    // Aquí puedes manejar el envío real del feedback, por ejemplo, enviándolo a una API.
     console.log({ feedback: formState.feedback, email: formState.email });
 
-    // Reiniciar el formulario
     setFormState({
+      subject: '',
       feedback: '',
-      email: '',
-      message: '¡Gracias por tus comentarios!',
-      isSubmitting: false
+      email: isAuthenticated ? userEmail : '',
+      isSubmitting: false,
+      errorMessage: null,
+      successMessage: '¡Gracias por tus comentarios!',
     });
-  }
+  };
 
   return (
     <div className="feedback-section">
-      <h2>Envíanos tus comentarios</h2>
-      {formState.message && <p>{formState.message}</p>}
+      {/* ... */}
       <form onSubmit={handleSubmit}>
+        {/* Nuevo campo de asunto */}
         <div className="feedback-input">
-          <label>
-            Comentarios:
-            <textarea 
-              value={formState.feedback} 
-              onChange={(e) => setFormState({ ...formState, feedback: e.target.value })} 
-              placeholder="Escribe tus comentarios aquí..."
-              required
-            />
+          <label htmlFor="subject-input">
+            Asunto:
           </label>
+          <input 
+            id="subject-input"
+            type="text" 
+            value={formState.subject} 
+            onChange={(e) => setFormState({ ...formState, subject: e.target.value })}
+            placeholder="Tema de tus comentarios"
+            maxLength={100}
+          />
         </div>
         <div className="feedback-input">
-          <label>
-            Correo Electrónico (opcional):
-            <input 
-              type="email" 
-              value={formState.email} 
-              onChange={(e) => setFormState({ ...formState, email: e.target.value })}
-              placeholder="Tu correo electrónico"
-            />
+          <label htmlFor="feedback-textarea">
+            Comentarios:
           </label>
+          <textarea 
+            id="feedback-textarea"
+            value={formState.feedback} 
+            onChange={(e) => setFormState({ ...formState, feedback: e.target.value })} 
+            placeholder="Escribe tus comentarios aquí..."
+            maxLength={MAX_FEEDBACK_LENGTH}
+            required
+          />
+          <small>{formState.feedback.length}/{MAX_FEEDBACK_LENGTH}</small>
+        </div>
+        <div className="feedback-input">
+          <label htmlFor="email-input">
+            Correo Electrónico (opcional):
+          </label>
+          <input 
+            id="email-input"
+            type="email" 
+            value={formState.email} 
+            onChange={(e) => setFormState({ ...formState, email: e.target.value })}
+            placeholder="Tu correo electrónico"
+            readOnly={isAuthenticated}
+          />
+          {!isAuthenticated && <small className="email-feedback">
+            {formState.email && !isValidEmail(formState.email) ? "Email inválido" : ""}
+          </small>}
         </div>
         <button type="submit" disabled={formState.isSubmitting}>
           {formState.isSubmitting ? 'Enviando...' : 'Enviar'}
         </button>
+        {formState.isSubmitting && <div className="loader"></div>}
       </form>
     </div>
   );
