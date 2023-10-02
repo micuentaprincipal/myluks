@@ -1,9 +1,38 @@
 import './App.css';
-import React, { lazy, Suspense, useState } from 'react';
-import { BrowserRouter as Router, Route, Link, Routes, useLocation } from 'react-router-dom';
-import FeedbackForm from './FeedbackForm';
+import React, { lazy, Suspense, useState, createContext, useContext, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Link, Routes, useLocation, Navigate } from 'react-router-dom';
 
 const Tutorial = lazy(() => import('./Tutorial'));
+const FeedbackForm = lazy(() => import('./FeedbackForm'));
+
+export const AuthContext = createContext<{
+  isAuthenticated: boolean;
+  email: string;
+  toggleAuthentication: () => void;
+  setEmail: (email: string) => void;
+}>({
+  isAuthenticated: false,
+  email: '',
+  toggleAuthentication: () => {},
+  setEmail: () => {},
+});
+
+export const ThemeContext = createContext<{ darkMode: boolean; toggleDarkMode: () => void }>({
+  darkMode: false,
+  toggleDarkMode: () => {},
+});
+
+// Crear un simple sistema de notificaciones:
+const NotificationContext = createContext<{ message?: string; showMessage: (msg: string) => void }>({
+  message: undefined,
+  showMessage: () => {},
+});
+
+// Componente de notificación
+const Notification: React.FC = () => {
+  const { message } = useContext(NotificationContext);
+  return message ? <div className="notification">{message}</div> : null;
+};
 
 interface ActiveLinkProps {
   to: string;
@@ -21,13 +50,19 @@ const ActiveLink: React.FC<ActiveLinkProps> = ({ to, children }) => {
   );
 };
 
-const Navigation: React.FC = () => (
+interface NavigationProps {
+  toggleDarkMode: () => void;
+  darkMode: boolean;
+}
+
+const Navigation: React.FC<NavigationProps> = ({ toggleDarkMode, darkMode }) => (
   <nav aria-label="Navegación principal">
     <ul role="menu">
       <li role="none"><ActiveLink to="/">Inicio</ActiveLink></li>
       <li role="none"><ActiveLink to="/tutorial">Tutorial</ActiveLink></li>
       <li role="none"><ActiveLink to="/feedback">Feedback</ActiveLink></li>
     </ul>
+    <button onClick={toggleDarkMode}>{darkMode ? 'Modo Claro' : 'Modo Oscuro'}</button>
   </nav>
 );
 
@@ -113,30 +148,54 @@ const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const toggleAuthentication = () => setIsAuthenticated(prev => !prev);
 
+  const [email, setEmail] = useState('');  // Nuevo estado para el email
+
+  const [darkMode, setDarkMode] = useState(false);
+  const toggleDarkMode = () => setDarkMode(prev => !prev);
+
+  useEffect(() => {
+    const themeClass = darkMode ? 'dark-mode' : 'light-mode';
+    document.body.className = themeClass;
+  }, [darkMode]);
+
+  // Lógica para mostrar notificaciones:
+  const [message, setMessage] = useState<string | undefined>();
+  const showMessage = (msg: string) => setMessage(msg);
+
   return (
     <Router>
-      <div className="App">
-        <header className="App-header">
-          <h1>MyLuks Wallet</h1>
-          <Navigation />
-        </header>
-        <Authentication isAuthenticated={isAuthenticated} toggleAuth={toggleAuthentication} />
-        <main role="main">
-          <ErrorBoundary>
-            <Suspense fallback={<div>Cargando...</div>}>
-              <Routes>
-                <Route path="/" element={<Home isAuthenticated={isAuthenticated} />} />
-                <Route path="/tutorial" element={<Tutorial />} />
-                <Route path="/feedback" element={<FeedbackForm />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </ErrorBoundary>
-        </main>
-        <footer>
-          <p>&copy; 2023 MyLuks Wallet. Todos los derechos reservados.</p>
-        </footer>
-      </div>
+      <AuthContext.Provider value={{ isAuthenticated, email, toggleAuthentication, setEmail }}>
+        <ThemeContext.Provider value={{ darkMode, toggleDarkMode }}>
+          {/* Proveer el contexto de notificación */}
+          <NotificationContext.Provider value={{ message, showMessage }}>
+            <div className="App">
+              <header className="App-header">
+                <h1>MyLuks Wallet</h1>
+                <Navigation toggleDarkMode={toggleDarkMode} darkMode={darkMode} />
+              </header>
+              <Authentication isAuthenticated={isAuthenticated} toggleAuth={toggleAuthentication} />
+              <main role="main">
+                <ErrorBoundary>
+                  <Suspense fallback={<div>Cargando...</div>}>
+                    <Routes>
+                      <Route path="/" element={<Home isAuthenticated={isAuthenticated} />} />
+                      <Route path="/tutorial" element={<Tutorial />} />
+                      <Route path="/feedback" element={<FeedbackForm />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </Suspense>
+                </ErrorBoundary>
+              </main>
+              <footer>
+                <p>&copy; {new Date().getFullYear()} MyLuks Wallet. Todos los derechos reservados.</p>
+              </footer>
+              
+              {/* Componente de notificación */}
+              <Notification />
+            </div>
+          </NotificationContext.Provider>
+        </ThemeContext.Provider>
+      </AuthContext.Provider>
     </Router>
   );
 };
